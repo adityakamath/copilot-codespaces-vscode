@@ -1,36 +1,47 @@
 // create web server
-// create a server object
+// create a web server that listens for requests on port 3000
+// when a request is received, read the file comments.json
+// send the contents of the file to the client
+// if the file is not found, send a 404 status code
+
+// require http module
 var http = require('http');
-var url = require('url');
+// require fs module
 var fs = require('fs');
+// require path module
+var path = require('path');
 
-http.createServer(function (req, res) {
-    // Parse the request containing file name
-    var pathname = url.parse(req.url).pathname;
-
-    // Print the name of the file for which request is made.
-    console.log("Request for " + pathname + " received.");
-
-    // Read the requested file content from file system
-    fs.readFile(pathname.substr(1), function (err, data) {
+// create server
+var server = http.createServer(function (req, res) {
+  // if request is a GET request
+  if (req.method === 'GET') {
+    // if request is for /comments
+    if (req.url === '/comments') {
+      // get the comments.json file
+      fs.readFile(path.join(__dirname, 'comments.json'), function (err, data) {
         if (err) {
-            console.log(err);
-            // HTTP Status: 404 : NOT FOUND
-            // Content Type: text/plain
-            res.writeHead(404, { 'Content-Type': 'text/html' });
-        } else {
-            //Page found
-            // HTTP Status: 200 : OK
-            // Content Type: text/plain
-            res.writeHead(200, { 'Content-Type': 'text/html' });
-
-            // Write the content of the file to response body
-            res.write(data.toString());
+          // if file is not found, send 404 status code
+          res.writeHead(404);
+          res.end();
+          return;
         }
-        // Send the response body
-        res.end();
-    });
-}).listen(8081);
+        // send the contents of the file to the client
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(data);
+      });
+    } else {
+      // if request is not for /comments, send 404 status code
+      res.writeHead(404);
+      res.end();
+    }
+  } else {
+    // if request is not a GET request, send 404 status code
+    res.writeHead(404);
+    res.end();
+  }
+});
 
-// Console will print the message
-console.log('Server running at http://');
+// listen for requests on port 3000
+server.listen(3000, function () {
+  console.log('Server listening on port 3000');
+});
